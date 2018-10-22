@@ -33,6 +33,7 @@ public class Hw6Jdbc {
 	private String dbPassword;
 	private Connection dbConn;
 	private ArrayList<Integer> dgIIPriKey;
+	private int queryVal[];
 	
 	
 	/**
@@ -101,6 +102,35 @@ public class Hw6Jdbc {
 			
 			System.out.println(" Done");
 		}
+		// Generate 10 random query numbers to between 1 and 50,000
+		System.out.print("Generating random query numbers...");
+		this.queryVal = new int[10];
+		boolean isRepeated = false;
+		for (int i=0; i<this.queryVal.length; i++) {
+			isRepeated = false;
+			
+			do {
+				this.queryVal[i] = this.getRandomInt(Hw6Jdbc.randIntMin, Hw6Jdbc.randIntMax);
+				
+				for (int j=0; j<this.queryVal.length; j++) {
+					if (i == j) {
+						continue;
+					} else if (this.queryVal[i] == this.queryVal[j]) {
+						isRepeated = true;
+						break;
+					} 
+				}
+				
+			} while (isRepeated == true);
+		}
+		System.out.print(" Done\nQuery numbers: [");
+		for (int i=0; i<this.queryVal.length; i++) {
+			if (i == (this.queryVal.length - 1) ) {
+				System.out.println(this.queryVal[i] + "]");
+			} else {
+				System.out.print(this.queryVal[i] + ", ");
+			}
+		}
 	}
 	
 	/**
@@ -116,7 +146,7 @@ public class Hw6Jdbc {
 		}
 		
 		// Create a Statement
-	    Statement stmt = this.dbConn.createStatement ();
+	    Statement stmt = this.dbConn.createStatement();
 
 	    // Create table benchmark with physical organization 1 (no secondary indexes)
 	    stmt.executeUpdate ("CREATE TABLE benchmark (" + 
@@ -145,7 +175,7 @@ public class Hw6Jdbc {
 		this.createTablePO1();
 		
 		// Create statement for index creation
-	    Statement stmt = this.dbConn.createStatement ();
+	    Statement stmt = this.dbConn.createStatement();
 
 	    // Create index on columnA of benchmark table for physical organization 2
 	    stmt.executeUpdate ("CREATE INDEX colAidx ON benchmark (columnA)");
@@ -170,7 +200,7 @@ public class Hw6Jdbc {
 		this.createTablePO1();
 		
 		// Create statement for index creation
-	    Statement stmt = this.dbConn.createStatement ();
+	    Statement stmt = this.dbConn.createStatement();
 
 	    // Create index on columnB of benchmark table for physical organization 3
 	    stmt.executeUpdate ("CREATE INDEX colBidx ON benchmark (columnB)");
@@ -195,8 +225,8 @@ public class Hw6Jdbc {
 		this.createTablePO1();
 		
 		// Create statements for index creation
-	    Statement stmtA = this.dbConn.createStatement ();
-	    Statement stmtB = this.dbConn.createStatement ();
+	    Statement stmtA = this.dbConn.createStatement();
+	    Statement stmtB = this.dbConn.createStatement();
 
 	    // Create indexes in columnA and columnB of benchmark table for physical organization 4
 	    stmtA.executeUpdate ("CREATE INDEX colAidx ON benchmark (columnA)");
@@ -234,6 +264,52 @@ public class Hw6Jdbc {
 		if (!this.dbConn.isClosed()) {
 			this.dbConn.close();
 		}
+	}
+	
+	/**
+	 * Drop and purge benchmark table from database.
+	 * 
+	 * @throws SQLException
+	 * @throws SQLTimeoutException
+	 * @throws NullPointerException
+	 */
+	private void dropTable()  throws SQLException, SQLTimeoutException, NullPointerException {
+		System.out.print("Droping table...");
+		
+		// Create a Statement
+	    Statement stmt = this.dbConn.createStatement();
+
+	    // Drop and purge benchmark table
+	    stmt.executeUpdate ("DROP TABLE benchmark PURGE");
+	    
+	    System.out.println(" Done");
+	}
+	
+	/**
+	 * Generate a pseudorandom in between min and max inclusive.
+	 * 
+	 * @param min	Min int boundary.
+	 * @param max	Max int boundary.
+	 * @return	Random int between min and max inclusive.
+	 */
+	private int getRandomInt(int min, int max) {
+		Random rand = new Random();
+		return rand.nextInt((max - min) + 1) + min;
+	}
+	
+	/**
+	 * Generate a pseudorandom String.
+	 * 
+	 * @param len	Length of the string.
+	 * @return	Random string of lenght l.
+	 */
+	private String getRandomStr(int len) {
+		Random rand = new Random();
+		StringBuilder sb = new StringBuilder(len);
+		for(int i=0; i<len; i++) {
+			sb.append(Hw6Jdbc.allowedChars.charAt(rand.nextInt(Hw6Jdbc.allowedChars.length())));
+		}
+		return sb.toString();
 	}
 	
 	/**
@@ -323,34 +399,231 @@ public class Hw6Jdbc {
 	}
 	
 	/**
-	 * Generate a pseudorandom in between min and max inclusive.
+	 * Run query 1 10 times for 10 random values.
 	 * 
-	 * @param min	Min int boundary.
-	 * @param max	Max int boundary.
-	 * @return	Random int between min and max inclusive.
+	 * @throws SQLException
+	 * @throws SQLTimeoutException
+	 * @throws NullPointerException
 	 */
-	private int getRandomInt(int min, int max) {
-		Random rand = new Random();
-		return rand.nextInt((max - min) + 1) + min;
+	private void query1() throws SQLException, SQLTimeoutException, NullPointerException {
+		System.out.println("Running query 1...");
+		System.out.print("\tRuntimes: ");
+		
+		long timing[];
+		@SuppressWarnings("unused")
+		int rowCount;
+		
+		// Create statement for query 1
+	    Statement stmt = this.dbConn.createStatement();
+	    
+		// Run query 1 10 times with 10 different values
+	    timing = new long[this.queryVal.length];
+		for (int i=0; i<this.queryVal.length; i++) {
+			timing[i] = System.currentTimeMillis();
+			
+			ResultSet rs = stmt.executeQuery("SELECT * FROM benchmark WHERE benchmark.columnA = " + this.queryVal[i]);
+			
+			rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			timing[i] = System.currentTimeMillis() - timing[i];
+			
+			//System.out.println("Query 1 run " + (i+1) + " results:");
+			//System.out.println("\tSearch value: " + this.queryVal[i]);
+			//System.out.println("\tRows returned: " + rowCount);
+			//System.out.println("\tRuntime: " + timing[i] + "ms / " + (timing[i]/60000.0) + "min");
+			if (i != (this.queryVal.length - 1)) {
+				System.out.print(timing[i] + ", ");
+			} else {
+				System.out.println(timing[i]);
+			}
+		}
+		
+		// Calculate average time
+		double tSum = 0.0;
+		for (int i=0; i<timing.length; i++) {
+			tSum += timing[i];
+		}
+		System.out.println("Done");
+		System.out.println("Query 1 average runtime: " + (tSum/timing.length) + "ms / " + ((tSum/timing.length)/60000.0) + "min");
 	}
 	
 	/**
-	 * Generate a pseudorandom String.
+	 * Run query 2 10 times for 10 random values.
 	 * 
-	 * @param len	Length of the string.
-	 * @return	Random string of lenght l.
+	 * @throws SQLException
+	 * @throws SQLTimeoutException
+	 * @throws NullPointerException
 	 */
-	private String getRandomStr(int len) {
-		Random rand = new Random();
-		StringBuilder sb = new StringBuilder(len);
-		for(int i=0; i<len; i++) {
-			sb.append(Hw6Jdbc.allowedChars.charAt(rand.nextInt(Hw6Jdbc.allowedChars.length())));
+	private void query2() throws SQLException, SQLTimeoutException, NullPointerException {
+		System.out.println("Running query 2...");
+		System.out.print("\tRuntimes: ");
+		
+		long timing[];
+		@SuppressWarnings("unused")
+		int rowCount;
+		
+		// Create statement for query 2
+	    Statement stmt = this.dbConn.createStatement();
+	    
+		// Run query 2 10 times with 10 different values
+	    timing = new long[this.queryVal.length];
+		for (int i=0; i<this.queryVal.length; i++) {
+			timing[i] = System.currentTimeMillis();
+			
+			ResultSet rs = stmt.executeQuery("SELECT * FROM benchmark WHERE benchmark.columnB = " + this.queryVal[i]);
+			
+			rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			timing[i] = System.currentTimeMillis() - timing[i];
+			
+			//System.out.println("Query 2 run " + (i+1) + " results:");
+			//System.out.println("\tSearch value: " + this.queryVal[i]);
+			//System.out.println("\tRows returned: " + rowCount);
+			//System.out.println("\tRuntime: " + timing[i] + "ms / " + (timing[i]/60000.0) + "min");
+			if (i != (this.queryVal.length - 1)) {
+				System.out.print(timing[i] + ", ");
+			} else {
+				System.out.println(timing[i]);
+			}
 		}
-		return sb.toString();
+		
+		// Calculate average time
+		double tSum = 0.0;
+		for (int i=0; i<timing.length; i++) {
+			tSum += timing[i];
+		}
+		System.out.println("Done");
+		System.out.println("Query 2 average runtime: " + (tSum/timing.length) + "ms / " + ((tSum/timing.length)/60000.0) + "min");
+	}
+	
+	/**
+	 * Run query 3 10 times for 10 random values.
+	 * 
+	 * @throws SQLException
+	 * @throws SQLTimeoutException
+	 * @throws NullPointerException
+	 */
+	private void query3() throws SQLException, SQLTimeoutException, NullPointerException {
+		System.out.println("Running query 3...");
+		System.out.print("\tRuntimes: ");
+		
+		long timing[];
+		@SuppressWarnings("unused")
+		int rowCount;
+		
+		// Create statement for query 3
+	    Statement stmt = this.dbConn.createStatement();
+	    
+		// Run query 3 10 times with 10 different values
+	    timing = new long[this.queryVal.length];
+		for (int i=0; i<this.queryVal.length; i++) {
+			timing[i] = System.currentTimeMillis();
+			
+			ResultSet rs = stmt.executeQuery("SELECT * FROM benchmark WHERE benchmark.columnA = " + this.queryVal[i] +
+					"AND benchmark.columnB = " + this.queryVal[i]);
+			
+			rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			timing[i] = System.currentTimeMillis() - timing[i];
+			
+			//System.out.println("Query 3 run " + (i+1) + " results:");
+			//System.out.println("\tSearch value: " + this.queryVal[i]);
+			//System.out.println("\tRows returned: " + rowCount);
+			//System.out.println("\tRuntime: " + timing[i] + "ms / " + (timing[i]/60000.0) + "min");
+			if (i != (this.queryVal.length - 1)) {
+				System.out.print(timing[i] + ", ");
+			} else {
+				System.out.println(timing[i]);
+			}
+		}
+		
+		// Calculate average time
+		double tSum = 0.0;
+		for (int i=0; i<timing.length; i++) {
+			tSum += timing[i];
+		}
+		System.out.println("Done");
+		System.out.println("Query 3 average runtime: " + (tSum/timing.length) + "ms / " + ((tSum/timing.length)/60000.0) + "min");
+	}
+	
+	/**
+	 * Creates and loads the benchmark table.
+	 * 
+	 * @throws SQLException
+	 * @throws NullPointerException
+	 * @throws IllegalArgumentException
+	 */
+	private void setUpTable() throws SQLException, NullPointerException, IllegalArgumentException {
+		// Create the table with the specified physical organization
+		switch (this.po) {
+		case po1:
+			try {
+				this.createTablePO1();
+			} catch (SQLException | NullPointerException e) {
+				throw e;
+			}
+			break;
+		case po2:
+			try {
+				this.createTablePO2();
+			} catch (SQLException | NullPointerException e) {
+				throw e;
+			}
+			break;
+		case po3:
+			try {
+				this.createTablePO3();
+			} catch (SQLException | NullPointerException e) {
+				throw e;
+			}
+			break;
+		case po4:
+			try {
+				this.createTablePO4();
+			} catch (SQLException | NullPointerException e) {
+				throw e;
+			}
+			break;
+		case poU:
+		default:
+			System.out.println("ERROR: unknown physical organization.");
+			throw new IllegalArgumentException("Unknown physical organization");
+		}
+
+		// Load table with specified data generator
+		switch (this.dg) {
+		case dgI:
+			try {
+				this.loadTableDGI();
+			} catch (SQLException | NullPointerException e) {
+				throw e;
+			}
+			break;
+		case dgII:
+			try {
+				this.loadTableDGII();
+			} catch (SQLException | NullPointerException e) {
+				throw e;
+			}
+			break;
+		case dgU:
+		default:
+			System.out.println("ERROR: unknown data generator.");
+			throw new IllegalArgumentException("Unknown data generator");
+		}
 	}
 	
 	/**
 	 * Read input arguments, and run the corresponding tasks.
+	 * 
+	 * Entry point.
+	 * 
 	 * @param args	Input arguments. 
 	 */
 	public static void main(String[] args) {
@@ -403,152 +676,41 @@ public class Hw6Jdbc {
 				}
 				return;
 			}
-
-			// Create the table with the specified physical organization
-			switch (hw6.po) {
-			case po1:
+			
+			try {
+				hw6.setUpTable();
+			} catch (SQLTimeoutException e) {
+				System.out.println("ERROR: Timeout setting up table: " + e.getMessage());
 				try {
-					hw6.createTablePO1();
-				} catch (SQLTimeoutException e) {
-					System.out.println("ERROR: Timeout creating table with po1: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (SQLException e) {
-					System.out.println("ERROR: Cannot create table with po1: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (NullPointerException e) {
-					System.out.println("ERROR: Cannot create table with po1 because of DB connection: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
 				}
-				break;
-			case po2:
+				return;
+			} catch (SQLException e) {
+				System.out.println("ERROR: Cannot set up table: " + e.getMessage());
 				try {
-					hw6.createTablePO2();
-				} catch (SQLTimeoutException e) {
-					System.out.println("ERROR: Timeout creating table with po2: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (SQLException e) {
-					System.out.println("ERROR: Cannot create table with po2: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (NullPointerException e) {
-					System.out.println("ERROR: Cannot create table with po2 because of DB connection: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
 				}
-				break;
-			case po3:
+				return;
+			} catch (NullPointerException e) {
+				System.out.println("ERROR: Cannot set up table because of DB connection: " + e.getMessage());
 				try {
-					hw6.createTablePO3();
-				} catch (SQLTimeoutException e) {
-					System.out.println("ERROR: Timeout creating table with po3: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (SQLException e) {
-					System.out.println("ERROR: Cannot create table with po3: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (NullPointerException e) {
-					System.out.println("ERROR: Cannot create table with po3 because of DB connection: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
 				}
-				break;
-			case po4:
-				try {
-					hw6.createTablePO4();
-				} catch (SQLTimeoutException e) {
-					System.out.println("ERROR: Timeout creating table with po4: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (SQLException e) {
-					System.out.println("ERROR: Cannot create table with po4: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (NullPointerException e) {
-					System.out.println("ERROR: Cannot create table with po4 because of DB connection: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				}
-				break;
-			case poU:
-			default:
-				System.out.println("ERROR: unknown physical organization.");
+				return;
+			} catch (IllegalArgumentException e) {
+				System.out.println("ERROR: Cannot set up table because of bad argument: " + e.getMessage());
 				try {
 					hw6.dbDisconnect();
 				} catch (SQLException e2) {
@@ -558,82 +720,69 @@ public class Hw6Jdbc {
 				}
 				return;
 			}
-
-			// Load table with specified data generator
-			switch (hw6.dg) {
-			case dgI:
+			
+			// Run query 1
+			try {
+				hw6.query1();
+				hw6.query2();
+				hw6.query3();
+			} catch (SQLTimeoutException e) {
+				System.out.println("ERROR: Timeout running queries: " + e.getMessage());
 				try {
-					hw6.loadTableDGI();
-				} catch (SQLTimeoutException e) {
-					System.out.println("ERROR: Timeout loading table with dgI: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (SQLException e) {
-					System.out.println("ERROR: Cannot load table with dgI: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (NullPointerException e) {
-					System.out.println("ERROR: Cannot load table with dgI because of DB connection: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
 				}
-				break;
-			case dgII:
+				return;
+			} catch (SQLException e) {
+				System.out.println("ERROR: Exception running queries: " + e.getMessage());
 				try {
-					hw6.loadTableDGII();
-				} catch (SQLTimeoutException e) {
-					System.out.println("ERROR: Timeout loading table with dgII: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (SQLException e) {
-					System.out.println("ERROR: Cannot load table with dgII: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
-				} catch (NullPointerException e) {
-					System.out.println("ERROR: Cannot load table with dgII because of DB connection: " + e.getMessage());
-					try {
-						hw6.dbDisconnect();
-					} catch (SQLException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					} catch (NullPointerException e2) {
-						System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-					}
-					return;
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
 				}
-				break;
-			case dgU:
-			default:
-				System.out.println("ERROR: unknown data generator.");
+				return;
+			} catch (NullPointerException e) {
+				System.out.println("ERROR: Exception running queries because of DB connection: " + e.getMessage());
+				try {
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				}
+				return;
+			}
+			
+			// Drop table
+			try {
+				hw6.dropTable();
+			} catch (SQLTimeoutException e) {
+				System.out.println("ERROR: Timeout dropping table: " + e.getMessage());
+				try {
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				}
+				return;
+			} catch (SQLException e) {
+				System.out.println("ERROR: Cannot drop table: " + e.getMessage());
+				try {
+					hw6.dbDisconnect();
+				} catch (SQLException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				} catch (NullPointerException e2) {
+					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
+				}
+				return;
+			} catch (NullPointerException e) {
+				System.out.println("ERROR: Cannot drop table because of DB connection: " + e.getMessage());
 				try {
 					hw6.dbDisconnect();
 				} catch (SQLException e2) {
