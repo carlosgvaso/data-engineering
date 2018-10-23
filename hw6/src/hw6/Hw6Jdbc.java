@@ -14,9 +14,10 @@ import java.util.Random;
  */
 public class Hw6Jdbc {
 	// Class variables
-	private static final String usageStr = "Usage:\njava -jar hw6jdbc.jar <data generator> <physical organization> <DB host> <DB user> <DB password>\n\nData generator:\n\tdgI - Use variation I of the data generator to load the database.\n\tdgII - Use variation II of the data generator to load the database.\n\nPhysical Organization:\n\tpo1 - Use the physical organization 1.\n\tpo2 - Use the physical organization 2.\n\tpo3 - Use the physical organization 3.\n\tpo4 - Use the physical organization 4.\n\nDB host:\n\t<host>:<port>//<sid> - Use the previous format to provide the DB host information.";
+	private static final String usageStr = "Usage:\njava -jar hw6jdbc.jar <data generator> <physical organization> <index creation> <DB host> <DB user> <DB password>\n\nData generator:\n\tdgI - Use variation I of the data generator to load the database.\n\tdgII - Use variation II of the data generator to load the database.\n\nPhysical Organization:\n\tpo1 - Use the physical organization 1.\n\tpo2 - Use the physical organization 2.\n\tpo3 - Use the physical organization 3.\n\tpo4 - Use the physical organization 4.\n\nIndex creation:\n\tbefore - Create indexes before loading table.\n\tafter - Create indexes after laoding table.\n\nDB host:\n\t<host>:<port>//<sid> - Use the previous format to provide the DB host information.";
 	private static enum DataGenerator { dgI, dgII, dgU; }
 	private static enum PhysicalOrganization { po1, po2, po3, po4, poU; }
+	private static enum IndexCreation { before, after, icU; }
 	private static final int tableSize = 5000000;
 	private static final int batchSize = 5000;
 	private static final int randIntMin = 1;
@@ -28,6 +29,7 @@ public class Hw6Jdbc {
 	// Instance variables
 	private DataGenerator dg;
 	private PhysicalOrganization po;
+	private IndexCreation ic;
 	private String dbHost;
 	private String dbUser;
 	private String dbPassword;
@@ -42,7 +44,7 @@ public class Hw6Jdbc {
 	 * @param dataGen		Data generator used.
 	 * @param physicalOrg	Physical organization used.
 	 */
-	private Hw6Jdbc(String dataGen, String physicalOrg, String host, String user, String password) {
+	private Hw6Jdbc(String dataGen, String physicalOrg, String indexCreation, String host, String user, String password) {
 		System.out.print("Data generator: ");
 		switch (dataGen) {
 			case "dgI":
@@ -79,6 +81,21 @@ public class Hw6Jdbc {
 			default:
 				System.out.println(physicalOrg);
 				this.po = PhysicalOrganization.poU;
+				break;
+		}
+		System.out.print("Index Creation: ");
+		switch (indexCreation) {
+			case "before":
+				System.out.println("before table loading");
+				this.ic = IndexCreation.before;
+				break;
+			case "after":
+				System.out.println("after table loading");
+				this.ic = IndexCreation.after;
+				break;
+			default:
+				System.out.println(indexCreation);
+				this.ic = IndexCreation.icU;
 				break;
 		}
 		this.dbHost = host;
@@ -141,9 +158,7 @@ public class Hw6Jdbc {
 	 * @throws NullPointerException
 	 */
 	private void createTablePO1() throws SQLException, SQLTimeoutException, NullPointerException {
-		if (this.po == Hw6Jdbc.PhysicalOrganization.po1) {
-			System.out.print("Creating table...");
-		}
+		//System.out.print("Creating table...");
 		
 		// Create a Statement
 	    Statement stmt = this.dbConn.createStatement();
@@ -153,9 +168,7 @@ public class Hw6Jdbc {
 	    		"theKey NUMBER PRIMARY KEY, columnA NUMBER, " + 
 	    		"columnB NUMBER, filler CHAR(247))");
 	    
-	    if (this.po == Hw6Jdbc.PhysicalOrganization.po1) {
-	    	System.out.println(" Done");
-	    }
+	    //System.out.println(" Done");
 	}
 	
 	/**
@@ -168,11 +181,8 @@ public class Hw6Jdbc {
 	 * @throws SQLTimeoutException
 	 * @throws NullPointerException
 	 */
-	private void createTablePO2() throws SQLException, SQLTimeoutException, NullPointerException {
-		System.out.print("Creating table...");
-		
-		// Create table
-		this.createTablePO1();
+	private void createIndexPO2() throws SQLException, SQLTimeoutException, NullPointerException {
+		//System.out.print("Creating index...");
 		
 		// Create statement for index creation
 	    Statement stmt = this.dbConn.createStatement();
@@ -180,7 +190,7 @@ public class Hw6Jdbc {
 	    // Create index on columnA of benchmark table for physical organization 2
 	    stmt.executeUpdate ("CREATE INDEX colAidx ON benchmark (columnA)");
 	    
-	    System.out.println(" Done");
+	    //System.out.println(" Done");
 	}
 	
 	/**
@@ -193,11 +203,8 @@ public class Hw6Jdbc {
 	 * @throws SQLTimeoutException
 	 * @throws NullPointerException
 	 */
-	private void createTablePO3() throws SQLException, SQLTimeoutException, NullPointerException {
-		System.out.print("Creating table...");
-		
-		// Create table
-		this.createTablePO1();
+	private void createIndexPO3() throws SQLException, SQLTimeoutException, NullPointerException {
+		//System.out.print("Creating index...");
 		
 		// Create statement for index creation
 	    Statement stmt = this.dbConn.createStatement();
@@ -205,7 +212,7 @@ public class Hw6Jdbc {
 	    // Create index on columnB of benchmark table for physical organization 3
 	    stmt.executeUpdate ("CREATE INDEX colBidx ON benchmark (columnB)");
 	    
-	    System.out.println(" Done");
+	    //System.out.println(" Done");
 	}
 	
 	/**
@@ -218,11 +225,8 @@ public class Hw6Jdbc {
 	 * @throws SQLTimeoutException
 	 * @throws NullPointerException
 	 */
-	private void createTablePO4() throws SQLException, SQLTimeoutException, NullPointerException {
-		System.out.print("Creating table...");
-		
-		// Create table
-		this.createTablePO1();
+	private void createIndexPO4() throws SQLException, SQLTimeoutException, NullPointerException {
+		//System.out.print("Creating indexes...");
 		
 		// Create statements for index creation
 	    Statement stmtA = this.dbConn.createStatement();
@@ -232,7 +236,7 @@ public class Hw6Jdbc {
 	    stmtA.executeUpdate ("CREATE INDEX colAidx ON benchmark (columnA)");
 	    stmtB.executeUpdate ("CREATE INDEX colBidx ON benchmark (columnB)");
 	    
-	    System.out.println(" Done");
+	    //System.out.println(" Done");
 	}
 	
 	/**
@@ -274,7 +278,7 @@ public class Hw6Jdbc {
 	 * @throws NullPointerException
 	 */
 	private void dropTable()  throws SQLException, SQLTimeoutException, NullPointerException {
-		System.out.print("Droping table...");
+		//System.out.print("Droping table...");
 		
 		// Create a Statement
 	    Statement stmt = this.dbConn.createStatement();
@@ -282,7 +286,7 @@ public class Hw6Jdbc {
 	    // Drop and purge benchmark table
 	    stmt.executeUpdate ("DROP TABLE benchmark PURGE");
 	    
-	    System.out.println(" Done");
+	    //System.out.println(" Done");
 	}
 	
 	/**
@@ -320,9 +324,7 @@ public class Hw6Jdbc {
 	 * @throws NullPointerException
 	 */
 	private void loadTableDGI() throws SQLException, SQLTimeoutException, NullPointerException {
-		System.out.print("Loading data...");
-		// Track insert time
-		long tStart = System.currentTimeMillis();
+		//System.out.print("Loading data...");
 		
 		// Create a prepared statement
 		String sql = "INSERT INTO benchmark (theKey, columnA, columnB, filler) values (?, ?, ?, ?)";
@@ -350,9 +352,7 @@ public class Hw6Jdbc {
 		}
 		ps.close();
 		
-		long tStop = System.currentTimeMillis();
-		System.out.println(" Done");
-        System.out.println("Loading time: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+		//System.out.println(" Done");
 	}
 	
 	/**
@@ -363,9 +363,7 @@ public class Hw6Jdbc {
 	 * @throws NullPointerException
 	 */
 	private void loadTableDGII() throws SQLException, SQLTimeoutException, NullPointerException {
-		System.out.print("Loading data...");
-		// Track insert time
-		long tStart = System.currentTimeMillis();
+		//System.out.print("Loading data...");
 		
 		// Create a prepared statement
 		String sql = "INSERT INTO benchmark (theKey, columnA, columnB, filler) values (?, ?, ?, ?)";
@@ -393,21 +391,38 @@ public class Hw6Jdbc {
 		}
 		ps.close();
 		
-		long tStop = System.currentTimeMillis();
-		System.out.println(" Done");
-        System.out.println("Loading time: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+		//System.out.println(" Done");
 	}
 	
 	/**
 	 * Run query 1 10 times for 10 random values.
+	 * 
+	 * Set up and drop the table every time to ensure the table is not cached.
 	 * 
 	 * @throws SQLException
 	 * @throws SQLTimeoutException
 	 * @throws NullPointerException
 	 */
 	private void query1() throws SQLException, SQLTimeoutException, NullPointerException {
+		// Set up table
+		try {
+			this.setUpTable();
+		} catch (SQLTimeoutException e) {
+			System.out.println("ERROR: Timeout setting up table: " + e.getMessage());
+			throw e;
+		} catch (SQLException e) {
+			System.out.println("ERROR: Cannot set up table: " + e.getMessage());
+			throw e;
+		} catch (NullPointerException e) {
+			System.out.println("ERROR: Cannot set up table because of DB connection: " + e.getMessage());
+			throw e;
+		} catch (IllegalArgumentException e) {
+			System.out.println("ERROR: Cannot set up table because of bad argument: " + e.getMessage());
+			throw e;
+		}
+		
 		System.out.println("Running query 1...");
-		System.out.print("\tRuntimes: ");
+		//System.out.print("\tRuntimes: ");
 		
 		long timing[];
 		@SuppressWarnings("unused")
@@ -433,11 +448,13 @@ public class Hw6Jdbc {
 			//System.out.println("\tSearch value: " + this.queryVal[i]);
 			//System.out.println("\tRows returned: " + rowCount);
 			//System.out.println("\tRuntime: " + timing[i] + "ms / " + (timing[i]/60000.0) + "min");
+			/*
 			if (i != (this.queryVal.length - 1)) {
 				System.out.print(timing[i] + ", ");
 			} else {
 				System.out.println(timing[i]);
 			}
+			*/
 		}
 		
 		// Calculate average time
@@ -447,18 +464,51 @@ public class Hw6Jdbc {
 		}
 		System.out.println("Done");
 		System.out.println("Query 1 average runtime: " + (tSum/timing.length) + "ms / " + ((tSum/timing.length)/60000.0) + "min");
+
+		// Drop table
+		try {
+			this.dropTable();
+		} catch (SQLTimeoutException e) {
+			System.out.println("ERROR: Timeout dropping table: " + e.getMessage());
+			throw e;
+		} catch (SQLException e) {
+			System.out.println("ERROR: Cannot drop table: " + e.getMessage());
+			throw e;
+		} catch (NullPointerException e) {
+			System.out.println("ERROR: Cannot drop table because of DB connection: " + e.getMessage());
+			throw e;
+		}
 	}
 	
 	/**
 	 * Run query 2 10 times for 10 random values.
+	 * 
+	 * Set up and drop the table every time to ensure the table is not cached.
 	 * 
 	 * @throws SQLException
 	 * @throws SQLTimeoutException
 	 * @throws NullPointerException
 	 */
 	private void query2() throws SQLException, SQLTimeoutException, NullPointerException {
+		// Set up table
+		try {
+			this.setUpTable();
+		} catch (SQLTimeoutException e) {
+			System.out.println("ERROR: Timeout setting up table: " + e.getMessage());
+			throw e;
+		} catch (SQLException e) {
+			System.out.println("ERROR: Cannot set up table: " + e.getMessage());
+			throw e;
+		} catch (NullPointerException e) {
+			System.out.println("ERROR: Cannot set up table because of DB connection: " + e.getMessage());
+			throw e;
+		} catch (IllegalArgumentException e) {
+			System.out.println("ERROR: Cannot set up table because of bad argument: " + e.getMessage());
+			throw e;
+		}
+		
 		System.out.println("Running query 2...");
-		System.out.print("\tRuntimes: ");
+		//System.out.print("\tRuntimes: ");
 		
 		long timing[];
 		@SuppressWarnings("unused")
@@ -470,6 +520,7 @@ public class Hw6Jdbc {
 		// Run query 2 10 times with 10 different values
 	    timing = new long[this.queryVal.length];
 		for (int i=0; i<this.queryVal.length; i++) {
+			
 			timing[i] = System.currentTimeMillis();
 			
 			ResultSet rs = stmt.executeQuery("SELECT * FROM benchmark WHERE benchmark.columnB = " + this.queryVal[i]);
@@ -484,11 +535,13 @@ public class Hw6Jdbc {
 			//System.out.println("\tSearch value: " + this.queryVal[i]);
 			//System.out.println("\tRows returned: " + rowCount);
 			//System.out.println("\tRuntime: " + timing[i] + "ms / " + (timing[i]/60000.0) + "min");
+			/*
 			if (i != (this.queryVal.length - 1)) {
 				System.out.print(timing[i] + ", ");
 			} else {
 				System.out.println(timing[i]);
 			}
+			*/
 		}
 		
 		// Calculate average time
@@ -498,18 +551,51 @@ public class Hw6Jdbc {
 		}
 		System.out.println("Done");
 		System.out.println("Query 2 average runtime: " + (tSum/timing.length) + "ms / " + ((tSum/timing.length)/60000.0) + "min");
+		
+		// Drop table
+		try {
+			this.dropTable();
+		} catch (SQLTimeoutException e) {
+			System.out.println("ERROR: Timeout dropping table: " + e.getMessage());
+			throw e;
+		} catch (SQLException e) {
+			System.out.println("ERROR: Cannot drop table: " + e.getMessage());
+			throw e;
+		} catch (NullPointerException e) {
+			System.out.println("ERROR: Cannot drop table because of DB connection: " + e.getMessage());
+			throw e;
+		}
 	}
 	
 	/**
 	 * Run query 3 10 times for 10 random values.
+	 * 
+	 * Set up and drop the table every time to ensure the table is not cached.
 	 * 
 	 * @throws SQLException
 	 * @throws SQLTimeoutException
 	 * @throws NullPointerException
 	 */
 	private void query3() throws SQLException, SQLTimeoutException, NullPointerException {
+		// Set up table
+		try {
+			this.setUpTable();
+		} catch (SQLTimeoutException e) {
+			System.out.println("ERROR: Timeout setting up table: " + e.getMessage());
+			throw e;
+		} catch (SQLException e) {
+			System.out.println("ERROR: Cannot set up table: " + e.getMessage());
+			throw e;
+		} catch (NullPointerException e) {
+			System.out.println("ERROR: Cannot set up table because of DB connection: " + e.getMessage());
+			throw e;
+		} catch (IllegalArgumentException e) {
+			System.out.println("ERROR: Cannot set up table because of bad argument: " + e.getMessage());
+			throw e;
+		}
+		
 		System.out.println("Running query 3...");
-		System.out.print("\tRuntimes: ");
+		//System.out.print("\tRuntimes: ");
 		
 		long timing[];
 		@SuppressWarnings("unused")
@@ -536,11 +622,13 @@ public class Hw6Jdbc {
 			//System.out.println("\tSearch value: " + this.queryVal[i]);
 			//System.out.println("\tRows returned: " + rowCount);
 			//System.out.println("\tRuntime: " + timing[i] + "ms / " + (timing[i]/60000.0) + "min");
+			/*
 			if (i != (this.queryVal.length - 1)) {
 				System.out.print(timing[i] + ", ");
 			} else {
 				System.out.println(timing[i]);
 			}
+			*/
 		}
 		
 		// Calculate average time
@@ -550,6 +638,20 @@ public class Hw6Jdbc {
 		}
 		System.out.println("Done");
 		System.out.println("Query 3 average runtime: " + (tSum/timing.length) + "ms / " + ((tSum/timing.length)/60000.0) + "min");
+		
+		// Drop table
+		try {
+			this.dropTable();
+		} catch (SQLTimeoutException e) {
+			System.out.println("ERROR: Timeout dropping table: " + e.getMessage());
+			throw e;
+		} catch (SQLException e) {
+			System.out.println("ERROR: Cannot drop table: " + e.getMessage());
+			throw e;
+		} catch (NullPointerException e) {
+			System.out.println("ERROR: Cannot drop table because of DB connection: " + e.getMessage());
+			throw e;
+		}
 	}
 	
 	/**
@@ -560,32 +662,263 @@ public class Hw6Jdbc {
 	 * @throws IllegalArgumentException
 	 */
 	private void setUpTable() throws SQLException, NullPointerException, IllegalArgumentException {
+		long tStart;
+		long tStop;
+		
 		// Create the table with the specified physical organization
 		switch (this.po) {
 		case po1:
 			try {
+				// Track insert time
+				tStart = System.currentTimeMillis();
 				this.createTablePO1();
+				
+				// Load table with specified data generator
+				switch (this.dg) {
+				case dgI:
+					try {
+						this.loadTableDGI();
+					} catch (SQLException | NullPointerException e) {
+						throw e;
+					}
+					break;
+				case dgII:
+					try {
+						this.loadTableDGII();
+					} catch (SQLException | NullPointerException e) {
+						throw e;
+					}
+					break;
+				case dgU:
+				default:
+					System.out.println("ERROR: unknown data generator.");
+					throw new IllegalArgumentException("Unknown data generator");
+				}
+				
+				tStop = System.currentTimeMillis();
+				System.out.println("Loading time: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
 			} catch (SQLException | NullPointerException e) {
 				throw e;
 			}
 			break;
 		case po2:
 			try {
-				this.createTablePO2();
+				switch (this.ic) {
+				case before:
+					// Track insert time
+					tStart = System.currentTimeMillis();
+					this.createTablePO1();
+					this.createIndexPO2();
+					
+					// Load table with specified data generator
+					switch (this.dg) {
+					case dgI:
+						try {
+							this.loadTableDGI();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgII:
+						try {
+							this.loadTableDGII();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgU:
+					default:
+						System.out.println("ERROR: unknown data generator.");
+						throw new IllegalArgumentException("Unknown data generator");
+					}
+					
+					tStop = System.currentTimeMillis();
+					System.out.println("Loading time before: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+					break;
+				case after:
+					// Track insert time
+					tStart = System.currentTimeMillis();
+					this.createTablePO1();
+					
+					// Load table with specified data generator
+					switch (this.dg) {
+					case dgI:
+						try {
+							this.loadTableDGI();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgII:
+						try {
+							this.loadTableDGII();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgU:
+					default:
+						System.out.println("ERROR: unknown data generator.");
+						throw new IllegalArgumentException("Unknown data generator");
+					}
+					
+					this.createIndexPO2();
+					tStop = System.currentTimeMillis();
+					System.out.println("Loading time after: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+					break;
+				case icU:
+				default:
+					System.out.println("ERROR: unknown index creation.");
+					throw new IllegalArgumentException("Unknown index creation");
+				}
 			} catch (SQLException | NullPointerException e) {
 				throw e;
 			}
 			break;
 		case po3:
 			try {
-				this.createTablePO3();
+				switch (this.ic) {
+				case before:
+					// Track insert time
+					tStart = System.currentTimeMillis();
+					this.createTablePO1();
+					this.createIndexPO3();
+					
+					// Load table with specified data generator
+					switch (this.dg) {
+					case dgI:
+						try {
+							this.loadTableDGI();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgII:
+						try {
+							this.loadTableDGII();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgU:
+					default:
+						System.out.println("ERROR: unknown data generator.");
+						throw new IllegalArgumentException("Unknown data generator");
+					}
+					
+					tStop = System.currentTimeMillis();
+					System.out.println("Loading time before: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+					break;
+				case after:
+					// Track insert time
+					tStart = System.currentTimeMillis();
+					this.createTablePO1();
+					
+					// Load table with specified data generator
+					switch (this.dg) {
+					case dgI:
+						try {
+							this.loadTableDGI();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgII:
+						try {
+							this.loadTableDGII();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgU:
+					default:
+						System.out.println("ERROR: unknown data generator.");
+						throw new IllegalArgumentException("Unknown data generator");
+					}
+					
+					this.createIndexPO3();
+					tStop = System.currentTimeMillis();
+					System.out.println("Loading time after: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+					break;
+				case icU:
+				default:
+					System.out.println("ERROR: unknown index creation.");
+					throw new IllegalArgumentException("Unknown index creation");
+				}
 			} catch (SQLException | NullPointerException e) {
 				throw e;
 			}
 			break;
 		case po4:
 			try {
-				this.createTablePO4();
+				switch (this.ic) {
+				case before:
+					// Track insert time
+					tStart = System.currentTimeMillis();
+					this.createTablePO1();
+					this.createIndexPO4();
+					
+					// Load table with specified data generator
+					switch (this.dg) {
+					case dgI:
+						try {
+							this.loadTableDGI();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgII:
+						try {
+							this.loadTableDGII();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgU:
+					default:
+						System.out.println("ERROR: unknown data generator.");
+						throw new IllegalArgumentException("Unknown data generator");
+					}
+					
+					tStop = System.currentTimeMillis();
+					System.out.println("Loading time before: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+					break;
+				case after:
+					// Track insert time
+					tStart = System.currentTimeMillis();
+					this.createTablePO1();
+					
+					// Load table with specified data generator
+					switch (this.dg) {
+					case dgI:
+						try {
+							this.loadTableDGI();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgII:
+						try {
+							this.loadTableDGII();
+						} catch (SQLException | NullPointerException e) {
+							throw e;
+						}
+						break;
+					case dgU:
+					default:
+						System.out.println("ERROR: unknown data generator.");
+						throw new IllegalArgumentException("Unknown data generator");
+					}
+					
+					this.createIndexPO4();
+					tStop = System.currentTimeMillis();
+					System.out.println("Loading time after: " + (tStop - tStart) + "ms / " + ((tStop - tStart)/60000.0) + "min");
+					break;
+				case icU:
+				default:
+					System.out.println("ERROR: unknown index creation.");
+					throw new IllegalArgumentException("Unknown index creation");
+				}
 			} catch (SQLException | NullPointerException e) {
 				throw e;
 			}
@@ -594,28 +927,6 @@ public class Hw6Jdbc {
 		default:
 			System.out.println("ERROR: unknown physical organization.");
 			throw new IllegalArgumentException("Unknown physical organization");
-		}
-
-		// Load table with specified data generator
-		switch (this.dg) {
-		case dgI:
-			try {
-				this.loadTableDGI();
-			} catch (SQLException | NullPointerException e) {
-				throw e;
-			}
-			break;
-		case dgII:
-			try {
-				this.loadTableDGII();
-			} catch (SQLException | NullPointerException e) {
-				throw e;
-			}
-			break;
-		case dgU:
-		default:
-			System.out.println("ERROR: unknown data generator.");
-			throw new IllegalArgumentException("Unknown data generator");
 		}
 	}
 	
@@ -628,13 +939,13 @@ public class Hw6Jdbc {
 	 */
 	public static void main(String[] args) {
 		// Check the input arguments
-		if (args.length != 5) {
+		if (args.length != 6) {
 			System.out.println("ERROR: wrong number of arguments.");
 			System.out.println("\n" + usageStr);
 			return;
 		}
 		
-		Hw6Jdbc hw6 = new Hw6Jdbc(args[0].toString(), args[1].toString(), args[2].toString(), args[3].toString(), args[4].toString());
+		Hw6Jdbc hw6 = new Hw6Jdbc(args[0].toString(), args[1].toString(), args[2].toString(), args[3].toString(), args[4].toString(), args[5].toString());
 		
 		// Check we got good DG and PO
 		boolean err = false;
@@ -677,51 +988,7 @@ public class Hw6Jdbc {
 				return;
 			}
 			
-			try {
-				hw6.setUpTable();
-			} catch (SQLTimeoutException e) {
-				System.out.println("ERROR: Timeout setting up table: " + e.getMessage());
-				try {
-					hw6.dbDisconnect();
-				} catch (SQLException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				} catch (NullPointerException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				}
-				return;
-			} catch (SQLException e) {
-				System.out.println("ERROR: Cannot set up table: " + e.getMessage());
-				try {
-					hw6.dbDisconnect();
-				} catch (SQLException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				} catch (NullPointerException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				}
-				return;
-			} catch (NullPointerException e) {
-				System.out.println("ERROR: Cannot set up table because of DB connection: " + e.getMessage());
-				try {
-					hw6.dbDisconnect();
-				} catch (SQLException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				} catch (NullPointerException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				}
-				return;
-			} catch (IllegalArgumentException e) {
-				System.out.println("ERROR: Cannot set up table because of bad argument: " + e.getMessage());
-				try {
-					hw6.dbDisconnect();
-				} catch (SQLException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				} catch (NullPointerException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				}
-				return;
-			}
-			
-			// Run query 1
+			// Run queries
 			try {
 				hw6.query1();
 				hw6.query2();
@@ -748,41 +1015,6 @@ public class Hw6Jdbc {
 				return;
 			} catch (NullPointerException e) {
 				System.out.println("ERROR: Exception running queries because of DB connection: " + e.getMessage());
-				try {
-					hw6.dbDisconnect();
-				} catch (SQLException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				} catch (NullPointerException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				}
-				return;
-			}
-			
-			// Drop table
-			try {
-				hw6.dropTable();
-			} catch (SQLTimeoutException e) {
-				System.out.println("ERROR: Timeout dropping table: " + e.getMessage());
-				try {
-					hw6.dbDisconnect();
-				} catch (SQLException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				} catch (NullPointerException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				}
-				return;
-			} catch (SQLException e) {
-				System.out.println("ERROR: Cannot drop table: " + e.getMessage());
-				try {
-					hw6.dbDisconnect();
-				} catch (SQLException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				} catch (NullPointerException e2) {
-					System.out.println("ERROR: Cannot disconnect from database: " + e2.getMessage());
-				}
-				return;
-			} catch (NullPointerException e) {
-				System.out.println("ERROR: Cannot drop table because of DB connection: " + e.getMessage());
 				try {
 					hw6.dbDisconnect();
 				} catch (SQLException e2) {
